@@ -1,9 +1,8 @@
-import { truncate } from "fs";
 import { Column, Entity, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
-@Entity({ name: 'user' })
+@Entity({ name: 'users' })
 
-export class User {
+export class Users {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -16,6 +15,6 @@ export class User {
     @Column({ nullable: false })
     senha: string;
 
-    @Column({ nullable: false })
+    @Column()
     points: number;
 }
