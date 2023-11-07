@@ -2,7 +2,7 @@ import { IsString, Length, IsInt, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateEntityDto {
     @IsString()
-    @Length(1, 15, { message: 'Name must be between 1 and 15 characters' }) // Maximum length of 15 characters
+    @Length(1, 15, { message: 'Name must be between 1 and 15 characters' }) 
     name: string;
 
     @IsString()
