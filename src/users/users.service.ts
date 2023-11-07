@@ -8,18 +8,22 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+
   constructor(@InjectRepository(Users) private readonly usersRepo: Repository<Users>) { }
 
   async create(createUserDto: CreateUserDto) {
     const user = {
       ...createUserDto,
-      senha: await bcrypt.hash(createUserDto.senha, 10)
+      points: 0,
+      senha: await bcrypt.hash(createUserDto.senha, 10),
+
     };
     const CreateUser = this.usersRepo.save(user);
     return {
       ...CreateUser,
       senha: undefined,
     }
+
   };
 
 
@@ -31,6 +35,10 @@ export class UsersService {
     return await this.usersRepo.findOne({
       where: { id }
     });
+  }
+
+  async findByEmail(email: string) {
+    return await this.usersRepo.findOne({ where: { email } });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -51,6 +59,7 @@ export class UsersService {
       throw new NotFoundException();
     }
 
-    return await this.usersRepo.remove;
+    return await this.usersRepo.remove(user);
   }
+
 }

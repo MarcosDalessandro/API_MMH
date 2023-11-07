@@ -12,6 +12,6 @@ export class CreateUserDto {
     @Length(1, 25, { message: 'Senha must be between 1 and 25 characters' }) 
     senha: string;
 
-    @IsNumber({}, { message: 'Points must be a number' })
+    @IsNumber()
     points: number = 0; 
 }
