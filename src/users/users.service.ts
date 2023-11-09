@@ -18,27 +18,31 @@ export class UsersService {
       senha: await bcrypt.hash(createUserDto.senha, 10),
 
     };
-    const CreateUser = this.usersRepo.save(user);
+    const createUser = await this.usersRepo.save(user);
     return {
-      ...CreateUser,
+      ...createUser,
       senha: undefined,
     }
 
   };
 
 
-  async findAll() {
-    return await this.usersRepo.find();
+  findAll() {
+    return this.usersRepo.find();
   }
 
   async findOne(id: number) {
-    return await this.usersRepo.findOne({
+    const achou = await this.usersRepo.findOne({
       where: { id }
     });
+    return {
+      ...achou,
+      senha: undefined,
+    }
   }
 
   async findByEmail(email: string) {
-    return await this.usersRepo.findOne({ where: { email } });
+    return await this.usersRepo.findOne({ where: { email: email } });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
