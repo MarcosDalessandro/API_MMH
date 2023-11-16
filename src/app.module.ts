@@ -9,6 +9,7 @@ import { EntitiesModule } from './entities/entities.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     UsersModule,
     EntitiesModule,
     AuthModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService, {
