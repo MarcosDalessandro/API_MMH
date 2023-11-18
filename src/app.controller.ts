@@ -9,7 +9,7 @@ import { IsPublic } from './auth/decorators/is-public.decorator';
 export class AppController {
   constructor(private readonly appService: AppService) { }
 
-  @IsPublic
+  @IsPublic()
   @Get()
   getHello(): string {
     return this.appService.getHello();
