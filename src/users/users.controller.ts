@@ -9,7 +9,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @IsPublic()
-  @Post()
+  @Post('cadastrar')
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
