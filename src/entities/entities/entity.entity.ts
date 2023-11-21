@@ -10,13 +10,13 @@ export class Entities {
     name: string;
 
     @Column({ nullable: false })
+    spawn: string;
+
+    @Column({ nullable: false })
+    health: number;
+
+    @Column({ nullable: false })
     type: string;
-
-    @Column({ nullable: false })
-    height: number;
-
-    @Column({ nullable: false })
-    width: number;
 
     @Column({ nullable: false })
     category: string;
