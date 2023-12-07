@@ -8,48 +8,21 @@ import { ValidationPipe } from '@nestjs/common';
 dotenv.config();
 
 admin.initializeApp();
+admin.firestore().settings({ ignoreUndefinedProperties: true });
 
-async function pickRandomDocument(req, res) {
-  try {
-    const firestore = admin.firestore();
-    const snapshot = await firestore.collection('yourCollection').get();
-    const documents = snapshot.docs.map(doc => doc.data());
-
-    // Randomly select a document
-    const randomIndex = Math.floor(Math.random() * documents.length);
-    const randomDocument = documents[randomIndex];
-
-    // Call the function to save the information
-    await saveEntityOfTheDay(randomDocument);
-
-    res.status(200).send('Operation completed successfully.');
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  }
-}
-
-async function saveEntityOfTheDay(data) {
-  const firestore = admin.firestore();
-  const entitieOfTheDayRef = firestore.collection('entitieOfTheDay');
-  await entitieOfTheDayRef.add(data);
-}
-
-const runtimeOpts: functions.RuntimeOptions = {
-  timeoutSeconds: 540,
-  memory: '1GB',
-};
-
-exports.pickRandomDocument = functions.runWith(runtimeOpts).https.onRequest(pickRandomDocument);
-
-// Set up Cloud Scheduler to trigger the function at midnight
-exports.scheduleJob = functions.pubsub
-  .schedule('*/5 * * * *')
-  .timeZone('GMT-3')
-  .onRun(async (context) => {
+export const onDocumentCreate = functions.firestore
+  .document('yourCollection/{documentId}')
+  .onCreate(async (snapshot, context) => {
     try {
-      // Trigger the function to pick a random document
-      await pickRandomDocument(null, null);
+      const data = snapshot.data();
+
+      // Log the data for debugging
+      console.log('Document Data:', data);
+
+      // Perform the logic to pick a random document and save it to "entitieOfTheDay"
+      await pickRandomDocumentAndSave(data);
+
+      console.log('Operation completed successfully');
     } catch (error) {
       console.error('Error:', error);
     }
@@ -57,10 +30,42 @@ exports.scheduleJob = functions.pubsub
     return null;
   });
 
+async function pickRandomDocumentAndSave(data) {
+  try {
+    const firestore = admin.firestore();
+    const snapshot = await firestore.collection('entities').get();
+    const documents = snapshot.docs.map(doc => doc.data());
+
+    // Randomly select a document
+    const randomIndex = Math.floor(Math.random() * documents.length);
+    const randomDocument = documents[randomIndex];
+
+    // Save the information to "entitieOfTheDay"
+    const entitieOfTheDayRef = firestore.collection('entitieOfTheDay');
+    await entitieOfTheDayRef.add(randomDocument);
+  } catch (error) {
+    console.error('Error in pickRandomDocumentAndSave:', error);
+  }
+}
+
+export const scheduleDailyJob = functions.pubsub
+  .schedule('/1 * * * * *')
+  .timeZone('your-timezone')
+  .onRun(async (context) => {
+    try {
+      await pickRandomDocumentAndSave(null);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+    return null;
+  });
 
 // NestJS Application Setup
 async function nestJsAppSetup() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: console,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -75,5 +80,7 @@ async function nestJsAppSetup() {
   await app.listen(port, "0.0.0.0");
 }
 
-// Run NestJS application setup
-nestJsAppSetup();
+// Run NestJS application setup only if the script is executed directly
+if (require.main === module) {
+  nestJsAppSetup();
+}
