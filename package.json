@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@firebase/firestore": "^4.4.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
@@ -32,6 +33,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "dotenv": "^16.3.1",
+    "firebase-admin": "^11.11.1",
+    "firebase-functions": "^4.5.0",
     "node-cron": "^3.0.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
