@@ -35,19 +35,19 @@ async function bootstrap() {
 
   // Schedule the function to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
-    console.log('Running the copyDocument function...');
-    await copyDocument();
+    console.log('Running the replaceDocument function...');
+    await replaceDocument();
   });
 
   // Export the function as a Firebase Cloud Function
   const scheduledFunction = functions.pubsub.schedule('0 0 * * *').timeZone('UTC').onRun(async () => {
-    console.log('Running the copyDocument function...');
-    await copyDocument();
+    console.log('Running the replaceDocument function...');
+    await replaceDocument();
   });
 }
 
-// Function to copy a document from the source collection to the destination collection
-async function copyDocument() {
+// Function to replace the existing document in the destination collection with a new one
+async function replaceDocument() {
   const firestore = admin.firestore();
   const sourceCollectionName = 'entities';
   const destinationCollectionName = 'entitieOfTheDay';
@@ -68,10 +68,33 @@ async function copyDocument() {
     // Get the data from the random document
     const randomData = randomDocument.data();
 
-    // Add a copy of the random document to the destination collection
+    // Delete existing document from the destination collection
+    await deleteExistingDocument(destinationCollectionName);
+
+    // Add the new document to the destination collection
     await firestore.collection(destinationCollectionName).add(randomData);
 
-    console.log('Document copied successfully.');
+    console.log('Document replaced successfully.');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+// Function to delete the existing document in the destination collection
+async function deleteExistingDocument(collectionName: string) {
+  const firestore = admin.firestore();
+
+  try {
+    const destinationQuerySnapshot = await firestore.collection(collectionName).get();
+
+    if (!destinationQuerySnapshot.empty) {
+      // Delete the existing document in the destination collection
+      destinationQuerySnapshot.forEach((doc) => {
+        firestore.collection(collectionName).doc(doc.id).delete();
+      });
+
+      console.log('Existing document deleted successfully.');
+    }
   } catch (error) {
     console.error('Error:', error);
   }
