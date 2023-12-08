@@ -1,71 +1,17 @@
-import * as admin from 'firebase-admin';
-import * as functions from 'firebase-functions';
-import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
+import * as admin from 'firebase-admin';
+import * as cron from 'node-cron';
+import * as functions from 'firebase-functions';
 
-dotenv.config();
+async function bootstrap() {
+  dotenv.config();
 
-admin.initializeApp();
-admin.firestore().settings({ ignoreUndefinedProperties: true });
+  admin.initializeApp();
 
-export const onDocumentCreate = functions.firestore
-  .document('yourCollection/{documentId}')
-  .onCreate(async (snapshot, context) => {
-    try {
-      const data = snapshot.data();
-
-      // Log the data for debugging
-      console.log('Document Data:', data);
-
-      // Perform the logic to pick a random document and save it to "entitieOfTheDay"
-      await pickRandomDocumentAndSave(data);
-
-      console.log('Operation completed successfully');
-    } catch (error) {
-      console.error('Error:', error);
-    }
-
-    return null;
-  });
-
-async function pickRandomDocumentAndSave(data) {
-  try {
-    const firestore = admin.firestore();
-    const snapshot = await firestore.collection('entities').get();
-    const documents = snapshot.docs.map(doc => doc.data());
-
-    // Randomly select a document
-    const randomIndex = Math.floor(Math.random() * documents.length);
-    const randomDocument = documents[randomIndex];
-
-    // Save the information to "entitieOfTheDay"
-    const entitieOfTheDayRef = firestore.collection('entitieOfTheDay');
-    await entitieOfTheDayRef.add(randomDocument);
-  } catch (error) {
-    console.error('Error in pickRandomDocumentAndSave:', error);
-  }
-}
-
-export const scheduleDailyJob = functions.pubsub
-  .schedule('/1 * * * * *')
-  .timeZone('your-timezone')
-  .onRun(async (context) => {
-    try {
-      await pickRandomDocumentAndSave(null);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-
-    return null;
-  });
-
-// NestJS Application Setup
-async function nestJsAppSetup() {
-  const app = await NestFactory.create(AppModule, {
-    logger: console,
-  });
+  const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -76,11 +22,45 @@ async function nestJsAppSetup() {
   );
 
   const port = process.env.PORT || 3000;
+  app.listen(port, "0.0.0.0", function () {
+    console.log(`Application is running on port ${port}`);
+  });
 
-  await app.listen(port, "0.0.0.0");
+  cron.schedule('0 0 * * *', async () => {
+    console.log('Running the randomizeAndMoveDocument function...');
+    await randomizeAndMoveDocument();
+  });
+
+  const scheduledFunction = functions.pubsub.schedule('0 0 * * *').timeZone('UTC').onRun(async () => {
+    console.log('Running the randomizeAndMoveDocument function...');
+    await randomizeAndMoveDocument();
+  });
 }
 
-// Run NestJS application setup only if the script is executed directly
-if (require.main === module) {
-  nestJsAppSetup();
+async function randomizeAndMoveDocument() {
+  const firestore = admin.firestore();
+  const sourceCollectionName = 'entities';
+  const destinationCollectionName = 'entitieOfTheDay';
+
+  try {
+    const sourceQuerySnapshot = await firestore.collection(sourceCollectionName).get();
+
+    if (sourceQuerySnapshot.empty) {
+      console.log('Source collection is empty.');
+      return;
+    }
+
+    const randomIndex = Math.floor(Math.random() * sourceQuerySnapshot.size);
+    const randomDocument = sourceQuerySnapshot.docs[randomIndex];
+    const randomData = randomDocument.data();
+
+    await firestore.collection(destinationCollectionName).add(randomData);
+    await firestore.collection(sourceCollectionName).doc(randomDocument.id).delete();
+
+    console.log('Document randomized and moved successfully.');
+  } catch (error) {
+    console.error('Error:', error);
+  }
 }
+
+bootstrap();
