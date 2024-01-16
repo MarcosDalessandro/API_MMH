@@ -40,10 +40,11 @@ async function bootstrap() {
   });
 
   // Export the function as a Firebase Cloud Function
-  const scheduledFunction = functions.pubsub.schedule('0 0 * * *').timeZone('UTC').onRun(async () => {
+  const scheduledFunction = functions.pubsub.schedule('*/3 * * * *').timeZone('UTC').onRun(async () => {
     console.log('Running the replaceDocument function...');
     await replaceDocument();
   });
+  
 }
 
 // Function to replace the existing document in the destination collection with a new one
