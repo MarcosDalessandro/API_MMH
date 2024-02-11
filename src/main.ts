@@ -12,13 +12,11 @@ async function bootstrap() {
   const serviceAccount = require('../aaa.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://mmh-1b0d3-default-rtdb.firebaseio.com', // Replace with your actual project ID
+    databaseURL: FireStoreDbUrl, 
   });
 
-  // Create NestJS application
   const app = await NestFactory.create(AppModule);
 
-  // Apply global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -27,13 +25,11 @@ async function bootstrap() {
     }),
   );
 
-  // Schedule the function to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running the replaceDocument function...');
     await replaceDocument();
   });
 
-  // Export the function as a Firebase Cloud Function
   const scheduledFunction = functions.pubsub.schedule('*/3 * * * *').timeZone('UTC').onRun(async () => {
     console.log('Running the replaceDocument function...');
     await replaceDocument();
@@ -41,7 +37,6 @@ async function bootstrap() {
   
 }
 
-// Function to replace the existing document in the destination collection with a new one
 async function replaceDocument() {
   const firestore = admin.firestore();
   const sourceCollectionName = 'entities';
@@ -56,17 +51,12 @@ async function replaceDocument() {
       return;
     }
 
-    // Get a random document from the source collection
     const randomIndex = Math.floor(Math.random() * sourceQuerySnapshot.size);
     const randomDocument = sourceQuerySnapshot.docs[randomIndex];
-
-    // Get the data from the random document
     const randomData = randomDocument.data();
 
-    // Delete existing document from the destination collection
     await deleteExistingDocument(destinationCollectionName);
 
-    // Add the new document to the destination collection
     await firestore.collection(destinationCollectionName).add(randomData);
 
     console.log('Document replaced successfully.');
@@ -75,7 +65,6 @@ async function replaceDocument() {
   }
 }
 
-// Function to delete the existing document in the destination collection
 async function deleteExistingDocument(collectionName: string) {
   const firestore = admin.firestore();
 
@@ -83,7 +72,6 @@ async function deleteExistingDocument(collectionName: string) {
     const destinationQuerySnapshot = await firestore.collection(collectionName).get();
 
     if (!destinationQuerySnapshot.empty) {
-      // Delete the existing document in the destination collection
       destinationQuerySnapshot.forEach((doc) => {
         firestore.collection(collectionName).doc(doc.id).delete();
       });
@@ -95,5 +83,4 @@ async function deleteExistingDocument(collectionName: string) {
   }
 }
 
-// Bootstrap the NestJS application
 bootstrap();
