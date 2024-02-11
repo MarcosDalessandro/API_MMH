@@ -67,3 +67,4 @@ dist/
 .env
 
 .game.json
+.vercel
