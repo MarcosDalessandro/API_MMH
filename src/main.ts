@@ -27,12 +27,6 @@ async function bootstrap() {
     }),
   );
 
-  // Start NestJS application
-  const port = process.env.PORT || 3000;
-  app.listen(port, '0.0.0.0', function () {
-    console.log(`Application is running on port ${port}`);
-  });
-
   // Schedule the function to run every day at midnight
   cron.schedule('0 0 * * *', async () => {
     console.log('Running the replaceDocument function...');
