@@ -14,7 +14,7 @@ export class EntitiesService {
 
     return await this.entitiesRepo.save(entities);
   }
-
+  
   async findAll() {
     return await this.entitiesRepo.find();
   }

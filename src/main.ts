@@ -3,19 +3,20 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import * as cron from 'node-cron';
-import * as functions from 'firebase-functions';
+// import * as cron from 'node-cron';
+// import * as functions from 'firebase-functions';
 
 async function bootstrap() {
   dotenv.config();
 
-  const serviceAccount = require('../aaa.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: FireStoreDbUrl, 
-  });
+  // const serviceAccount = require('../aaa.json');
+  // admin.initializeApp({
+  //   credential: admin.credential.cert(serviceAccount),
+  //   databaseURL: FireStoreDbUrl, 
+  // });
 
   const app = await NestFactory.create(AppModule);
+  const PORT = process.env.API_PORT || 3000;
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -25,16 +26,18 @@ async function bootstrap() {
     }),
   );
 
-  cron.schedule('0 0 * * *', async () => {
-    console.log('Running the replaceDocument function...');
-    await replaceDocument();
-  });
+  // cron.schedule('0 0 * * *', async () => {
+  //   console.log('Running the replaceDocument function...');
+  //   await replaceDocument();
+  // });
 
-  const scheduledFunction = functions.pubsub.schedule('*/3 * * * *').timeZone('UTC').onRun(async () => {
-    console.log('Running the replaceDocument function...');
-    await replaceDocument();
-  });
-  
+  // const scheduledFunction = functions.pubsub.schedule('*/3 * * * *').timeZone('UTC').onRun(async () => {
+  //   console.log('Running the replaceDocument function...');
+  //   await replaceDocument();
+  // });
+
+  await app.listen(PORT);
+
 }
 
 async function replaceDocument() {

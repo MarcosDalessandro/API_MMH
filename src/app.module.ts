@@ -10,6 +10,8 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { GameModule } from './game/game.module';
+import { ForwardingModule } from './testAxios/forwarding.module';
+import { ScalingModule } from './scaling/scaling.module';
 
 @Module({
   imports: [
@@ -17,20 +19,24 @@ import { GameModule } from './game/game.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (ConfigService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: ConfigService.get('DB_HOST'),
-        port: +ConfigService.get('DB_PORT'),
-        username: ConfigService.get('DB_USERNAME'),
-        password: ConfigService.get('DB_PASSWORD'),
-        database: ConfigService.get('DB_NAME'),
+        host: configService.get<string>('DB_HOST', 'db_mmh'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('POSTGRES_USER'),
+        password: configService.get<string>('POSTGRES_PASSWORD'),
+        database: configService.get<string>('POSTGRES_DB'),
+        synchronize: true,
+        logging: true,  // Ativa o log detalhado
         entities: [join(process.cwd(), 'dist/**/*.entity.js')],
-      })
+      }),
     }),
     UsersModule,
     EntitiesModule,
     AuthModule,
     GameModule,
+    ForwardingModule,
+    ScalingModule,
   ],
   controllers: [AppController],
   providers: [AppService, {

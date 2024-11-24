@@ -1,0 +1,13 @@
+{
+  "type": "postgres",
+  "host": "db_mmh",
+  "port": 5432,
+  "username": "${POSTGRES_USER}",
+  "password": "${POSTGRES_PASSWORD}",
+  "database": "${POSTGRES_DB}",
+  "entities": [
+    "dist/**/*.entity{.ts,.js}"
+  ],
+  "synchronize": true,
+  "logging": true
+}
